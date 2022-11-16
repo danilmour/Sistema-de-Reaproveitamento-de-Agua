@@ -38,6 +38,8 @@ void setup()
   delayTime = 1000;
 
   Serial.println();
+
+  pinMode(RELES, OUTPUT);
 }
 
 void printValues()
