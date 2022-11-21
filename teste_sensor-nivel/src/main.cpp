@@ -1,20 +1,9 @@
-/*
-  Rui Santos
-  Complete project details at https://RandomNerdTutorials.com/esp32-spi-communication-arduino/
-  Based on the Adafruit_BME280_Library example: https://github.com/adafruit/Adafruit_BME280_Library/blob/master/examples/bme280test/bme280test.ino
-
-  Permission is hereby granted, free of charge, to any person obtaining a copy
-  of this software and associated documentation files.
-  
-  The above copyright notice and this permission notice shall be included in all
-  copies or substantial portions of the Software.
-*/
-
 #include <Wire.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
-
 #include <SPI.h>
+#include <Arduino.h>
+
 #define BME_SCK 18
 #define BME_MISO 19
 #define BME_MOSI 23
