@@ -1,0 +1,25 @@
+version: "3"
+services:
+  db:
+    container_name: mysql
+    image: mysql
+    ports:
+      - 3306:3306
+    volumes:
+      - mysql_data:/data
+    environment:
+      MYSQL_ROOT_PASSWORD: naosei
+    restart: always
+    
+  node-red:
+    container_name: node-red
+    image: nodered/node-red
+    ports:
+      - 1880:1880
+    volumes:
+      - node_red_data:/data
+    restart: always
+    
+volumes:
+  mysql_data:
+  node_red_data:
