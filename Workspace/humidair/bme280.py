@@ -56,77 +56,77 @@ def makePin(pin, constructor):
         return pin
     return constructor(pin)
 
-class BME280I2C:
-    """BME280 low level I2C wrapper.
-    """
-    __slots__ = (
-        "__micropython",
-        "__addr",
-        "__i2c",
-    )
+# class BME280I2C:
+#     """BME280 low level I2C wrapper.
+#     """
+#     __slots__ = (
+#         "__micropython",
+#         "__addr",
+#         "__i2c",
+#     )
 
-    def __init__(self, i2cBus, i2cAddr, i2cFreq):
-        self.__addr = i2cAddr
-        self.__micropython = isMicropython
-        try:
-            if self.__micropython:
-                from machine import I2C, SoftI2C, Pin
-                if isinstance(i2cBus, (I2C, SoftI2C)):
-                    self.__i2c = i2cBus
-                else:
-                    opts = {
-                        "freq"  : i2cFreq * 1000,
-                    }
-                    if isinstance(i2cBus, dict):
-                        opts["scl"] = makePin(i2cBus["scl"], lambda p: Pin(p, mode=Pin.OPEN_DRAIN, value=1))
-                        opts["sda"] = makePin(i2cBus["sda"], lambda p: Pin(p, mode=Pin.OPEN_DRAIN, value=1))
-                        i2cBus = i2cBus.get("index", -1)
-                    else:
-                        assert i2cBus >= 0
-                    if i2cBus < 0:
-                        self.__i2c = SoftI2C(**opts)
-                    else:
-                        self.__i2c = I2C(i2cBus, **opts)
-            else:
-                from smbus import SMBus
-                if isinstance(i2cBus, SMBus):
-                    self.__i2c = i2cBus
-                else:
-                    self.__i2c = SMBus(i2cBus)
-        except Exception as e:
-            raise BME280Error("BME280: I2C error: %s" % str(e))
+#     def __init__(self, i2cBus, i2cAddr, i2cFreq):
+#         self.__addr = i2cAddr
+#         self.__micropython = isMicropython
+#         try:
+#             if self.__micropython:
+#                 from machine import I2C, SoftI2C, Pin
+#                 if isinstance(i2cBus, (I2C, SoftI2C)):
+#                     self.__i2c = i2cBus
+#                 else:
+#                     opts = {
+#                         "freq"  : i2cFreq * 1000,
+#                     }
+#                     if isinstance(i2cBus, dict):
+#                         opts["scl"] = makePin(i2cBus["scl"], lambda p: Pin(p, mode=Pin.OPEN_DRAIN, value=1))
+#                         opts["sda"] = makePin(i2cBus["sda"], lambda p: Pin(p, mode=Pin.OPEN_DRAIN, value=1))
+#                         i2cBus = i2cBus.get("index", -1)
+#                     else:
+#                         assert i2cBus >= 0
+#                     if i2cBus < 0:
+#                         self.__i2c = SoftI2C(**opts)
+#                     else:
+#                         self.__i2c = I2C(i2cBus, **opts)
+#             else:
+#                 from smbus import SMBus
+#                 if isinstance(i2cBus, SMBus):
+#                     self.__i2c = i2cBus
+#                 else:
+#                     self.__i2c = SMBus(i2cBus)
+#         except Exception as e:
+#             raise BME280Error("BME280: I2C error: %s" % str(e))
 
-    def close(self):
-        if self.__micropython:
-            try:
-                if hasattr(self.__i2c, "deinit"):
-                    self.__i2c.deinit()
-            except Exception:
-                pass
-        else:
-            try:
-                self.__i2c.close()
-            except Exception:
-                pass
-        self.__i2c = None
+#     def close(self):
+#         if self.__micropython:
+#             try:
+#                 if hasattr(self.__i2c, "deinit"):
+#                     self.__i2c.deinit()
+#             except Exception:
+#                 pass
+#         else:
+#             try:
+#                 self.__i2c.close()
+#             except Exception:
+#                 pass
+#         self.__i2c = None
 
-    def write(self, reg, data):
-        try:
-            if self.__micropython:
-                self.__i2c.writeto_mem(self.__addr, reg, data)
-            else:
-                self.__i2c.write_i2c_block_data(self.__addr, reg, list(data))
-        except Exception as e:
-            raise BME280Error("BME280: I2C error: %s" % str(e))
+#     def write(self, reg, data):
+#         try:
+#             if self.__micropython:
+#                 self.__i2c.writeto_mem(self.__addr, reg, data)
+#             else:
+#                 self.__i2c.write_i2c_block_data(self.__addr, reg, list(data))
+#         except Exception as e:
+#             raise BME280Error("BME280: I2C error: %s" % str(e))
 
-    def read(self, reg, length):
-        try:
-            if self.__micropython:
-                return self.__i2c.readfrom_mem(self.__addr, reg, length)
-            else:
-                return bytes(self.__i2c.read_i2c_block_data(self.__addr, reg, length))
-        except Exception as e:
-            raise BME280Error("BME280: I2C error: %s" % str(e))
+#     def read(self, reg, length):
+#         try:
+#             if self.__micropython:
+#                 return self.__i2c.readfrom_mem(self.__addr, reg, length)
+#             else:
+#                 return bytes(self.__i2c.read_i2c_block_data(self.__addr, reg, length))
+#         except Exception as e:
+#             raise BME280Error("BME280: I2C error: %s" % str(e))
 
 class BME280SPI:
     """BME280 low level SPI wrapper.
