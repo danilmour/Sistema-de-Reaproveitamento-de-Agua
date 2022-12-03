@@ -2,7 +2,7 @@ from time import sleep
 from bme280 import BME280
 
 
-from machine import Pin
+from machine import Pin, ADC
 from hcsr04 import HCSR04
 import bme280
 
@@ -17,12 +17,25 @@ Cnt_Dis_C2 = Pin(12, Pin.IN)  # Contacto auxiliar - Motor 2
 Cnt_Aux_C1 = Pin(14, Pin.IN)  # Contacto auxiliar - Motor 1
 Cnt_Aux_C2 = Pin(27, Pin.IN)  # Contacto auxiliar - Motor 2
 
+# Potenciometros que simulam os contadores da água
+Cnt_Agua_sys = ADC(Pin(32))  # Contador água do sistema
+Cnt_Agua_sys.atten(ADC.ATTN_11DB)       #Full range: 3.3v
+Cnt_Agua_rede = ADC(Pin(33))  # Contaágua da rede
+Cnt_Agua_rede.atten(ADC.ATTN_11DB)       #Full range: 3.3v
+
+
 """
   Cálculo temperatura e humidade
   Bloco desumidificação
 """
 # Connect to BME-280 via software SPI with custom pinning (not supported by all microcontrollers):
 bme = bme280.BME280(spiBus={"sck": 18, "mosi": 23, "miso": 19}, spiCS=5)
+
+def cntagua():
+  print(Cnt_Agua_sys.read())
+  print('')
+  print(Cnt_Agua_rede.read())
+  print('')
 
 def temperatura():
   try:
@@ -111,3 +124,4 @@ while True:
   temperatura()
   nivel()
   CntAux()
+  cntagua()
