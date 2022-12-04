@@ -1,7 +1,6 @@
 from time import sleep
 from bme280 import BME280
 
-
 from machine import Pin, ADC
 from hcsr04 import HCSR04
 import bme280
@@ -23,19 +22,30 @@ Cnt_Agua_sys.atten(ADC.ATTN_11DB)       #Full range: 3.3v
 Cnt_Agua_rede = ADC(Pin(33))  # Contaágua da rede
 Cnt_Agua_rede.atten(ADC.ATTN_11DB)       #Full range: 3.3v
 
+# Controlo do desumidificador - ON/OFF
+Cnt_desHUM = Pin(15, Pin.OUT)  # Led nível superior ao minimo
+Cnt_desHUM.value (0)
 
-"""
-  Cálculo temperatura e humidade
-  Bloco desumidificação
-"""
-# Connect to BME-280 via software SPI with custom pinning (not supported by all microcontrollers):
-bme = bme280.BME280(spiBus={"sck": 18, "mosi": 23, "miso": 19}, spiCS=5)
+# Simulação Válvulas 3 vias
+Cnt_V3V = Pin(2, Pin.OUT)
+Cnt_V3V.value(0) # Válvula de 3 vias fechada - enche depósito
 
 def cntagua():
   print(Cnt_Agua_sys.read())
   print('')
   print(Cnt_Agua_rede.read())
   print('')
+
+
+#### Informação desumidificador/temperatura ####
+##############################################
+#
+# Bloco desumidificação
+#
+#########################################
+
+# Connect to BME-280 via software SPI with custom pinning (not supported by all microcontrollers):
+bme = bme280.BME280(spiBus={"sck": 18, "mosi": 23, "miso": 19}, spiCS=5)
 
 def temperatura():
   try:
@@ -52,7 +62,19 @@ def temperatura():
 
   except bme280.BME280Error as e:
     print(f"BME280 error: {e}")
+  
+  if humidity * 100 > 72: # MUDAR ISTO
+    Cnt_desHUM.value (1)
+  else: 
+    Cnt_desHUM.value (0)
 
+
+#### Sinalização dos contactos auxiliares ####
+##############################################
+#
+# Bloco transporte
+#
+#########################################
 
 def CntAux():
   if Cnt_Dis_C1.value() == 0:
@@ -78,15 +100,12 @@ def CntAux():
 
   print('')
 
-
 #### Cálculo do nível da água no depósito ####
 ##############################################
-########################################
 #
 # Bloco armazenamento
 #
 #########################################
-
 
 def nivel():
   # Complete project details at https://RandomNerdTutorials.com/micropython-hc-sr04-ultrasonic-esp32-esp8266/
@@ -100,6 +119,7 @@ def nivel():
   if distance > 5 and distance < 20:
     led_amarelo.value(1)
     led_azul.value(0)
+    Cnt_V3V.value (0) # Válvula de 3 vias fechada - enche depósito - Led Azul
     print('tanque entre valor minimo e maximo')
 
   ##
@@ -108,14 +128,16 @@ def nivel():
   if distance > 20:
     led_amarelo.value(0)
     led_azul.value(1)
+    Cnt_V3V.value (0) # Válvula de 3 vias fechada - enche depósito - Led Azul
     print('tanque no valor minimo')
 
 ##
-  # Só para uma questão de simulação
+  # Só para uma questão de simulação - TANQUE COMPLETAMENTE CHEI0
   # distancia maior que 20 apaga os leds
   if distance < 5:
     led_amarelo.value(1)
     led_azul.value(1)
+    Cnt_V3V.value (1) # Válvula 3 vias aberta - água fora - Led Amarelo
     print('tanque maximo')
   sleep(1)
 
