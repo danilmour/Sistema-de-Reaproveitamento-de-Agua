@@ -1,4 +1,4 @@
-from time import sleep
+from time import sleep, time
 from bme280 import BME280
 
 from machine import Pin, ADC
@@ -13,8 +13,8 @@ Cnt_Dis_C1 = Pin(13, Pin.IN)  # Contacto auxiliar - Motor 1
 Cnt_Dis_C2 = Pin(12, Pin.IN)  # Contacto auxiliar - Motor 2
 
 # Leitura dos tempos de funcionamento dos motores
-Cnt_Aux_C1 = Pin(14, Pin.IN)  # Contacto auxiliar - Motor 1
-Cnt_Aux_C2 = Pin(27, Pin.IN)  # Contacto auxiliar - Motor 2
+Motor_1 = Pin(14, Pin.OUT)  # Contacto auxiliar - Motor 1
+Motor_2 = Pin(27, Pin.OUT)  # Contacto auxiliar - Motor 2
 
 # Potenciometros que simulam os contadores da água
 Cnt_Agua_sys = ADC(Pin(32))  # Contador água do sistema
@@ -29,6 +29,8 @@ Cnt_desHUM.value(0)
 # Simulação Válvulas 3 vias
 Cnt_V3V = Pin(2, Pin.OUT)
 Cnt_V3V.value(0)  # Válvula de 3 vias fechada - enche depósito
+
+cnt = 0
 
 #### Informação web-server ####
 #########################################
@@ -87,7 +89,6 @@ def Read_BME(n):
   except bme280.BME280Error as e:
     print(f"BME280 error: {e}")
 
-  # Se o desumidificador não tiver sido desligado manualmente, é atuado quando a humidade for superior a 60%
   if humidity * 100 > 60 and n == 1:  # MUDAR ISTO
     Cnt_desHUM.value(1)
   else:
@@ -232,21 +233,39 @@ def CntAux():
 
   print('')
 
-  if Cnt_Aux_C1.value() == 0:
-    print('Motor 1 Parado')
-  else:
-    print('Motor 1 em funcionamento')
-  if Cnt_Aux_C2.value() == 0:
-    print('Motor 2 Parado')
-  else:
-    print('Motor 2 em funcionamento')
+  #if Cnt_Aux_C1.value() == 0:
+  #  print('Motor 1 Parado')
+  #else:
+  #  print('Motor 1 em funcionamento')
+  #if Cnt_Aux_C2.value() == 0:
+  #  print('Motor 2 Parado')
+  #else:
+  #  print('Motor 2 em funcionamento')
 
-  print('')
-
+  #sleep(1)
+  
+def CntCaudal(toggle, cnt):
+    if cnt <= 5:
+        end2 = time()*1000
+        begin1 = time()*1000
+        Motor_1.value(1)
+        Motor_2.value(0)
+    elif cnt > 5 and cnt <= 10:
+        end1 = time()*1000
+        begin2 = time()*1000
+        Motor_1.value(0)
+        Motor_2.value(1)
+        
+        time1 = end1 - begin1
+        print("Tempo de funcionamento do Motor 1: " + time1)
+        print("")
+        time2 = end2 - begin2
+        print("Tempo de funcionamento do Motor 2: " + time2)
+        
 while True:
-   webserver()
+   #webserver()
    #Read_BME()
    #nivel()
-   #CntAux()
-   #cntagua()
-
+   CntAux()
+   CntCaudal(0, cnt)
+   cnt = cnt + 1
