@@ -32,6 +32,8 @@ Cnt_V3V = Pin(2, Pin.OUT)
 Cnt_V3V.value(0)  # Válvula de 3 vias fechada - enche depósito
 
 cnt = 0
+toggle = 0
+
 
 
 #### Informação web-server ####
@@ -217,8 +219,11 @@ def webserver():
    
 def Cntagua():
   print(Cnt_Agua_sys.read())
-  if Cnt_Agua_sys.read() < 1500
-      
+  if Cnt_Agua_sys.read() < 1500 # Pouco caudal, bombas funcionam em alternância
+    if cnt = 0:
+        time_start = rtc.datetime()
+    cnt = cnt + 1
+    CntCaudal(time_start, cnt)
   print('')
   print(Cnt_Agua_rede.read())
   print('')
@@ -255,13 +260,15 @@ def CntAux():
 
   #sleep(1)
   
-def CntCaudal(toggle, cnt):
-    if cnt <= 5:
+def CntCaudal(time_start, cnt):
+    if rtc.datetime() <= time_start[6] + 5:
         Motor_1.value(1)
         Motor_2.value(0)
         cnt = cnt +1
-        
-    elif cnt > 5 and cnt <= 10:
+        if cnt = 5:
+            time_end = rtc.datetime()
+
+    elif cnt > 5 and cnt <= 10 and toggle = 1:
         Motor_1.value(0)
         Motor_2.value(1)
         
