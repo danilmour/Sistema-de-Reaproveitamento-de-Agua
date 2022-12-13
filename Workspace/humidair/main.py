@@ -33,6 +33,8 @@ Cnt_V3V.value(0)  # Válvula de 3 vias fechada - enche depósito
 
 cnt = 0
 toggle = 0
+soma = 0
+aux = 0
 
 
 
@@ -77,12 +79,10 @@ def refresh(conn, n):
 
 # Connect to BME-280 via software SPI with custom pinning (not supported by all microcontrollers):
 bme = bme280.BME280(spiBus={"sck": 18, "mosi": 23, "miso": 19}, spiCS=5)
-
+rtc = RTC()
 
 def Read_BME(n):
   try:
-    rtc = RTC()
-    time_now = rtc.datetime() #rtc.datetime((2015,10,1,4,17,11,0,0))
     #print (time [0])
     # Synchronously trigger a MODE_FORCED conversion and return the result.
     temperature, humidity, pressure = bme.readForced(filter=bme280.FILTER_2,
@@ -100,10 +100,6 @@ def Read_BME(n):
     Cnt_desHUM.value(1)
   else:
     Cnt_desHUM.value(0)
- 
-  time_then = rtc.datetime()
-  
-  print(time_then[4] - time_now[4], time_then[5] - time_now[5], time_then[6] - time_now[6])
   
   return temperature, humidity*100
 
@@ -217,17 +213,47 @@ def webserver():
             Cnt_desHUM.value(0)
             refresh(conn, 0)
    
-def Cntagua():
-  print(Cnt_Agua_sys.read())
-  if Cnt_Agua_sys.read() < 1500 # Pouco caudal, bombas funcionam em alternância
-    if cnt = 0:
-        time_start = rtc.datetime()
-    cnt = cnt + 1
-    CntCaudal(time_start, cnt)
-  print('')
-  print(Cnt_Agua_rede.read())
-  print('')
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
+
+def Cntagua(cnt, soma):
+    print (Cnt_Agua_sys.read())
+    if Cnt_Agua_sys.read() < 1500:  # Pouco caudal, bombas funcionam em alternancia
+        if cnt == 1:
+            time_start = rtc.datetime()
+            print (time_start)
+            Motor_1.value(0)#Motor_1 = Pin(14, Pin.OUT)  # Contacto auxiliar - Motor 1
+            Motor_2.value(1)
+            time.sleep(1)
+            time_actual = rtc.datetime()
+            print ('xpto', time_actual)
+            soma = soma + abs(time_actual[6] - time_start[6])
+            if soma > 5:
+                cnt = 0
+                soma = 0
+            print (soma)
+        if cnt == 0:
+            time_start = rtc.datetime()
+            print (time_start)
+            Motor_1.value(1)
+            Motor_2.value(0)
+            time.sleep(1)
+            time_actual = rtc.datetime()
+            print (time_actual)
+            soma = soma + abs(time_actual[6] - time_start[6])
+            if soma > 5:
+                cnt = 1
+                soma = 0
+            print (soma)
+    if Cnt_Agua_sys.read() > 1500:  # Muito caudal, funcionam as duas bombas em conjunto
+        Motor_1.value(1)
+        Motor_2.value(1)
+    print ('')
+    print (Cnt_Agua_rede.read())
+    print ('')
+
+    return (cnt, soma)
 
 #### Sinalização dos contactos auxiliares ####
 ##############################################
@@ -260,27 +286,27 @@ def CntAux():
 
   #sleep(1)
   
-def CntCaudal(time_start, cnt):
-    if rtc.datetime() <= time_start[6] + 5:
-        Motor_1.value(1)
-        Motor_2.value(0)
-        cnt = cnt +1
-        if cnt = 5:
-            time_end = rtc.datetime()
-
-    elif cnt > 5 and cnt <= 10 and toggle = 1:
-        Motor_1.value(0)
-        Motor_2.value(1)
-        
-        print("Tempo de funcionamento do Motor 1: " + time1)
-        print("")
-        print("Tempo de funcionamento do Motor 2: " + time2)
+# def CntCaudal(time_start, cnt):
+#     if rtc.datetime() <= time_start[6] + 5:
+#         Motor_1.value(1)
+#         Motor_2.value(0)
+#         cnt = cnt +1
+#         if cnt = 5:
+#             time_end = rtc.datetime()
+# 
+#     elif cnt > 5 and cnt <= 10 and toggle = 1:
+#         Motor_1.value(0)
+#         Motor_2.value(1)
+#         
+#         print("Tempo de funcionamento do Motor 1: " + time1)
+#         print("")
+#         print("Tempo de funcionamento do Motor 2: " + time2)
         
 while True:
    #webserver()
-   Read_BME(0)
+   #Read_BME(0)
    #nivel()
-   Cntagua() 
+   cnt, soma = Cntagua(cnt, soma)
    #CntAux()
    #CntCaudal(0, cnt)
    #cnt = cnt + 1
