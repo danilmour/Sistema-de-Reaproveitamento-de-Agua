@@ -35,6 +35,8 @@ cnt = 0
 toggle = 0
 soma = 0
 aux = 0
+acumulador1 = 0
+acumulador2 = 0
 
 
 
@@ -217,8 +219,9 @@ def webserver():
 # -*- coding: utf-8 -*-
 
 
-def Cntagua(cnt, soma):
+def Cntagua(cnt, soma, tempoTotal1, tempoTotal2):
     print (Cnt_Agua_sys.read())
+    time.sleep(0.01) #delay para a leitura atuar na iteração atual.
     if Cnt_Agua_sys.read() < 1500:  # Pouco caudal, bombas funcionam em alternancia
         if cnt == 1:
             time_start = rtc.datetime()
@@ -229,6 +232,7 @@ def Cntagua(cnt, soma):
             time_actual = rtc.datetime()
             print ('xpto', time_actual)
             soma = soma + abs(time_actual[6] - time_start[6])
+            tempoTotal1 = tempoTotal1 + 1
             if soma > 5:
                 cnt = 0
                 soma = 0
@@ -242,6 +246,7 @@ def Cntagua(cnt, soma):
             time_actual = rtc.datetime()
             print (time_actual)
             soma = soma + abs(time_actual[6] - time_start[6])
+            tempoTotal2 = tempoTotal2 + 1        
             if soma > 5:
                 cnt = 1
                 soma = 0
@@ -249,11 +254,19 @@ def Cntagua(cnt, soma):
     if Cnt_Agua_sys.read() > 1500:  # Muito caudal, funcionam as duas bombas em conjunto
         Motor_1.value(1)
         Motor_2.value(1)
+        tempoTotal1 = tempoTotal1 + 1
+        tempoTotal2 = tempoTotal2 + 1
+        soma = 0
+        cnt = 0
+        time.sleep(1)
     print ('')
     print (Cnt_Agua_rede.read())
     print ('')
+    print ("Tempo total motor 1: ", tempoTotal1)
+    print ('')
+    print ("Tempo total motor 2: ", tempoTotal2)
 
-    return (cnt, soma)
+    return (cnt, soma, tempoTotal1, tempoTotal2)
 
 #### Sinalização dos contactos auxiliares ####
 ##############################################
@@ -306,7 +319,7 @@ while True:
    #webserver()
    #Read_BME(0)
    #nivel()
-   cnt, soma = Cntagua(cnt, soma)
+   cnt, soma, acumulador1, acumulador2 = Cntagua(cnt, soma, acumulador1, acumulador2)
    #CntAux()
    #CntCaudal(0, cnt)
    #cnt = cnt + 1
