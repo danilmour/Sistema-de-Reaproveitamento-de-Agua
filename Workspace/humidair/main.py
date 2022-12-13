@@ -183,21 +183,65 @@ def web_page(n):
           
       Cntagua()
       
-      html = """<html><head> <title>HumidAir</title> <meta http-equiv="refresh" content="5" name="viewport" content="width=device-width, initial-scale=1">
-      <link rel="icon" href="data:,"> <style>html{font-family: Helvetica; display:inline-block; margin: 0px auto; text-align: center;}
-      h1{color: #0F3376; padding: 2vh;}p{font-size: 1.5rem;}.button{display: inline-block; background-color: green; border: none;
-      border-radius: 4px; color: white; padding: 16px 40px; text-decoration: none; font-size: 30px; margin: 2px; cursor: pointer;}
-      .button2{background-color: red;}</style></head><body> <h1>ESP Web Server</h1>
-      <p>Desumidificador: <strong>""" + gpio_state + """</strong>
-      <p>Temperatura: <strong>""" + str(temperatura) + """</strong>
-      <p>Humidade: <strong>""" + str(humidade) + """</strong>
-      <p>Desligar Desumidificador - SOS
-      </p><p><a href="/?led=on"><button class="button">ON</button></a></p>
-      <p><a href="/?led=off"><button class="button button2">OFF</button></a></p>
-      <p>Estado deposito: <strong>""" + estado_deposito + """</strong></p>
-      <p>Tempo de funcionamento do Motor 1: """ + str(tempoTotal1) + """</p>
-      <p>Tempo de funcionamento do Motor 2: """ + str(tempoTotal2) + """</p>
-      </body></html>"""
+      html = """<html>
+
+                    <head>
+                        <title>HumidAir</title>
+                        <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+                        <meta http-equiv="refresh" content="5" name="viewport" content="width=device-width, initial-scale=1">
+                        <link rel="icon" href="data:,">
+                        <style>
+                            html {
+                                font-family: Helvetica;
+                                display: inline-block;
+                                margin: 0px auto;
+                                text-align: center;
+                            }
+
+                            h1 {
+                                color: darkblue;
+                                padding: 2vh;
+                            }
+
+                            p {
+                                font-size: 1.5rem;
+                            }
+
+                            .button {
+                                display: inline-block;
+                                background-color: green;
+                                border-radius: 4px;
+                                border-color: darkgreen;
+                                width: 150px;
+                                color: white;
+                                padding: 16px 40px;
+                                text-decoration: none;
+                                font-size: 30px;
+                                margin: 2px;
+                                cursor: pointer;
+                            }
+
+                            .button2 {
+                                background-color: red;
+                                border-color: darkred;
+                            }
+                        </style>
+                    </head>
+
+                    <body>
+                        <h1>HumidAir</h1>
+                        <p>Desumidificador: <strong>""" + gpio_state + """</strong>
+                        <p>Temperatura: <strong>""" + str(temperatura) + """</strong>
+                        <p>Humidade: <strong>""" + str(humidade) + """</strong>
+                        <p style="color: red"><b>! Desligar Desumidificador - SOS !</b> </p>
+                        <a href="/?led=on"><button class="button">ON</button></a>
+                        <a href="/?led=off"><button class="button button2">OFF</button></a>
+                        <p>Estado deposito: <strong>""" + estado_deposito + """</strong></p>
+                        <p>Tempo de funcionamento do Motor 1: <b>""" + str(tempoTotal1) + """</b></p>
+                        <p>Tempo de funcionamento do Motor 2: <b>""" + str(tempoTotal2) + """</b></p>
+                    </body>
+
+                    </html>"""
       return html
 
 def webserver():
