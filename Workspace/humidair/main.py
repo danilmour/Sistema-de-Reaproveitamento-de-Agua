@@ -35,8 +35,8 @@ cnt = 0
 toggle = 0
 soma = 0
 aux = 0
-acumulador1 = 0
-acumulador2 = 0
+tempoTotal1 = 0
+tempoTotal2 = 0
 
 
 
@@ -153,7 +153,7 @@ def nivel():
     led_azul.value(1)
     Cnt_V3V.value(1)  # Válvula 3 vias aberta - água fora
     print('tanque maximo')
-  sleep(1)
+  time.sleep(1)
   
   return nivel_maximo, nivel_medio, nivel_minimo
 
@@ -179,7 +179,9 @@ def web_page(n):
       elif nivel_medio == 1:
           estado_deposito = "Medio"
       elif nivel_minimo == 1:
-          estado_deposito = "vazio"         
+          estado_deposito = "vazio"
+          
+      Cntagua()
       
       html = """<html><head> <title>HumidAir</title> <meta http-equiv="refresh" content="5" name="viewport" content="width=device-width, initial-scale=1">
       <link rel="icon" href="data:,"> <style>html{font-family: Helvetica; display:inline-block; margin: 0px auto; text-align: center;}
@@ -192,7 +194,9 @@ def web_page(n):
       <p>Desligar Desumidificador - SOS
       </p><p><a href="/?led=on"><button class="button">ON</button></a></p>
       <p><a href="/?led=off"><button class="button button2">OFF</button></a></p>
-      <p>Estado deposito: <strong>""" + estado_deposito + """</strong>    
+      <p>Estado deposito: <strong>""" + estado_deposito + """</strong></p>
+      <p>Tempo de funcionamento do Motor 1: """ + str(tempoTotal1) + """</p>
+      <p>Tempo de funcionamento do Motor 2: """ + str(tempoTotal2) + """</p>
       </body></html>"""
       return html
 
@@ -214,13 +218,14 @@ def webserver():
             print('Desumidificador OFF')
             Cnt_desHUM.value(0)
             refresh(conn, 0)
-   
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
 
-
-def Cntagua(cnt, soma, tempoTotal1, tempoTotal2):
+def Cntagua():
     print (Cnt_Agua_sys.read())
+    global cnt
+    global soma
+    global tempoTotal1
+    global tempoTotal2
+    
     time.sleep(0.01) #delay para a leitura atuar na iteração atual.
     if Cnt_Agua_sys.read() < 1500:  # Pouco caudal, bombas funcionam em alternancia
         if cnt == 1:
@@ -232,7 +237,7 @@ def Cntagua(cnt, soma, tempoTotal1, tempoTotal2):
             time_actual = rtc.datetime()
             print ('xpto', time_actual)
             soma = soma + abs(time_actual[6] - time_start[6])
-            tempoTotal1 = tempoTotal1 + 1
+            tempoTotal1 = tempoTotal1 + soma
             if soma > 5:
                 cnt = 0
                 soma = 0
@@ -246,7 +251,7 @@ def Cntagua(cnt, soma, tempoTotal1, tempoTotal2):
             time_actual = rtc.datetime()
             print (time_actual)
             soma = soma + abs(time_actual[6] - time_start[6])
-            tempoTotal2 = tempoTotal2 + 1        
+            tempoTotal2 = tempoTotal2 + soma       
             if soma > 5:
                 cnt = 1
                 soma = 0
@@ -266,7 +271,7 @@ def Cntagua(cnt, soma, tempoTotal1, tempoTotal2):
     print ('')
     print ("Tempo total motor 2: ", tempoTotal2)
 
-    return (cnt, soma, tempoTotal1, tempoTotal2)
+    #return (cnt, soma, tempoTotal1, tempoTotal2)
 
 #### Sinalização dos contactos auxiliares ####
 ##############################################
@@ -316,10 +321,10 @@ def CntAux():
 #         print("Tempo de funcionamento do Motor 2: " + time2)
         
 while True:
-   #webserver()
+   webserver()
    #Read_BME(0)
    #nivel()
-   cnt, soma, acumulador1, acumulador2 = Cntagua(cnt, soma, acumulador1, acumulador2)
+   #Cntagua()
    #CntAux()
    #CntCaudal(0, cnt)
    #cnt = cnt + 1
