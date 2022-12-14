@@ -260,7 +260,7 @@ def web_page(n):
                     </table>
                     <table class="table" align="center">
                         <thead>
-                            <h2 class="alerta">Emergência</h2>
+                            <h2 class="alerta">Paragem de Emergência</h2>
                         </thead>
                         <tr>
                             <td class="alerta">
