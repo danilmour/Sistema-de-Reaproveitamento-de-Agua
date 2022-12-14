@@ -171,63 +171,119 @@ def web_page(n):
 
     html = """<html>
 
-                    <head>
-                        <title>HumidAir</title>
-                        <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-                        <meta http-equiv="refresh" content="5" name="viewport" content="width=device-width, initial-scale=1">
-                        <link rel="icon" href="data:,">
-                        <style>
-                            html {
-                                font-family: Helvetica;
-                                display: inline-block;
-                                margin: 0px auto;
-                                text-align: center;
-                            }
+                <head>
+                    <title>HumidAir</title>
+                    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+                    <meta http-equiv="refresh" content="5" name="viewport" content="width=device-width, initial-scale=1">
+                    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+                    <style>
+                        body,
+                        td {
+                            text-align: center;
+                        }
 
-                            h1 {
-                                color: darkblue;
-                                padding: 2vh;
-                            }
+                        .buttons {
+                            width: 150px;
+                        }
 
-                            p {
-                                font-size: 1.5rem;
-                            }
+                        p,
+                        td {
+                            font-size: 15pt;
+                        }
 
-                            .button {
-                                display: inline-block;
-                                background-color: green;
-                                border-radius: 4px;
-                                border-color: darkgreen;
-                                width: 150px;
-                                color: white;
-                                padding: 16px 40px;
-                                text-decoration: none;
-                                font-size: 30px;
-                                margin: 2px;
-                                cursor: pointer;
-                            }
+                        h1,
+                        h2 {
+                            color: darkblue;
+                        }
 
-                            .button2 {
-                                background-color: red;
-                                border-color: darkred;
-                            }
-                        </style>
-                    </head>
+                        .alerta {
+                            color: red;
+                        }
+                    </style>
+                </head>
 
-                    <body>
-                        <h1>HumidAir</h1>
-                        <p>Desumidificador: <strong>""" + gpio_state + """</strong>
-                        <p>Temperatura: <strong>""" + str(temperatura) + """</strong>
-                        <p>Humidade: <strong>""" + str(humidade) + """</strong>
-                        <p style="color: red"><b>! Desligar Desumidificador - SOS !</b> </p>
-                        <a href="/?led=on"><button class="button">ON</button></a>
-                        <a href="/?led=off"><button class="button button2">OFF</button></a>
-                        <p>Estado deposito: <strong>""" + estado_deposito + """</strong></p>
-                        <p>Tempo de funcionamento do Motor 1: <b>""" + str(tempoTotal1) + """</b></p>
-                        <p>Tempo de funcionamento do Motor 2: <b>""" + str(tempoTotal2) + """</b></p>
-                    </body>
+                <body>
+                    <h1><b>HumidAir</b></h1>
+                    <hr>
+                    <table class="table">
+                        <thead>
+                            <h2>Informações</h2>
+                        </thead>
+                        <tr>
+                            <td>
+                                <b>Desumidificador</b>
+                            </td>
+                            <td>
+                                """ + gpio_state + """
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <b>Temperatura</b>
+                            </td>
+                            <td>
+                                """ + str(temperatura) + """ ºC
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <b>Humidade</b>
+                            </td>
+                            <td>
+                                """ + str(humidade) + """ %
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <b>Estado do Depósito</b>
+                            </td>
+                            <td>
+                                """ + estado_deposito + """
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <b>Tempo de funcionamento do Motor 1</b>
+                            </td>
+                            <td>
+                                """ + str(tempoTotal1) + """ s
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <b>Tempo de funcionamento do Motor 2</b>
+                            </td>
+                            <td>
+                                """ + str(tempoTotal2) + """ s
+                            </td>
+                        </tr>
+                    </table>
+                    <table class="table" align="center">
+                        <thead>
+                            <h2 class="alerta">Emergência</h2>
+                        </thead>
+                        <tr>
+                            <td class="alerta">
+                                <b>! Desligar Desumidificador - SOS !</b>
+                            </td>
+                            <td>
+                                <a href="/?led=on"><button class="btn btn-success fs-1 buttons">ON</button></a>
+                                <a href="/?led=off"><button class="btn btn-danger fs-1 buttons">OFF</button></a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="alerta">
+                                <b>! Desligar Central - SOS !</b>
+                            </td>
+                            <td>
+                                <a href="/?central=on"><button class="btn btn-success fs-1 buttons">ON</button></a>
+                                <a href="/?central=off"><button class="btn btn-danger fs-1 buttons">OFF</button></a>
+                            </td>
+                        </tr>
+                    </table>
+                </body>
 
-                    </html>"""
+                </html>"""
     return html
 
 
