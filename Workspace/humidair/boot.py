@@ -1,18 +1,14 @@
-# boot.py -- run on boot-up
-# Complete project details at https://RandomNerdTutorials.com
-
 try:
-  import usocket as socket
+    import usocket as socket
 except:
-  import socket
-
+    import socket
 from machine import Pin
 import network
-
 import esp
+import gc
+
 esp.osdebug(None)
 
-import gc
 gc.collect()
 
 ssid = '6ea6en6'
@@ -24,9 +20,7 @@ station.active(True)
 station.connect(ssid, password)
 
 while station.isconnected() == False:
-  pass
+    pass
 
 print('Connection successful')
 print(station.ifconfig())
-
-#led = Pin(2, Pin.OUT)
