@@ -196,6 +196,7 @@ def web_page(n):
             color: darkblue;
         }
 
+<<<<<<< HEAD:Backup_APAGAR/main.py
         .alerta {
             color: red;
         }
@@ -205,6 +206,99 @@ def web_page(n):
         }
     </style>
 </head>
+=======
+                        .alerta {
+                            color: red;
+                        }
+
+                        .espaco {
+                            height: 100px;
+                        }
+                    </style>
+                </head>
+
+                <body>
+                    <h1><b>HumidAir</b></h1>
+                    <hr>
+                    <table class="table">
+                        <thead>
+                            <h2>Informações</h2>
+                        </thead>
+                        <tr>
+                            <td>
+                                <b>Desumidificador</b>
+                            </td>
+                            <td>
+                                """ + gpio_state + """
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <b>Temperatura</b>
+                            </td>
+                            <td>
+                                """ + str(temperatura) + """ ºC
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <b>Humidade</b>
+                            </td>
+                            <td>
+                                """ + str(humidade) + """ %
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <b>Estado do Depósito</b>
+                            </td>
+                            <td>
+                                """ + estado_deposito + """
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <b>Tempo de funcionamento da Bomba 1</b>
+                            </td>
+                            <td>
+                                """ + str(tempoTotal1) + """ s
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <b>Tempo de funcionamento da Bomba 2</b>
+                            </td>
+                            <td>
+                                """ + str(tempoTotal2) + """ s
+                            </td>
+                        </tr>
+                    </table>
+                    <div class="espaco"></div>
+                    <table class="table" align="center">
+                        <tr>
+                            <h2 class="alerta">Paragem de Emergência</h2>
+                        </tr>
+                        <tr>
+                            <td class="alerta">
+                                <b>! Desligar Desumidificador - SOS !</b>
+                            </td>
+                            <td>
+                                <a href="/?led=on"><button class="btn btn-outline-success fs-1 buttons">ON</button></a>
+                                <a href="/?led=off"><button class="btn btn-outline-danger fs-1 buttons">OFF</button></a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="alerta">
+                                <b>! Desligar Central - SOS !</b>
+                            </td>
+                            <td>
+                                <a href="/?central=on"><button class="btn btn-outline-success fs-1 buttons">ON</button></a>
+                                <a href="/?central=off"><button class="btn btn-outline-danger fs-1 buttons">OFF</button></a>
+                            </td>
+                        </tr>
+                    </table>
+                </body>
+>>>>>>> 31ab0a0ceceda717004c13d18f22bb6c1b725bd3:Workspace/humidair/main.py
 
 <body>
     <h1><b>HumidAir</b></h1>
