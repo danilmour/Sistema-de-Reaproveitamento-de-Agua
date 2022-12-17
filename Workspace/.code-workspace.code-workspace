@@ -1,8 +1,0 @@
-{
-	"folders": [
-		{
-			"name": "serial://dev/ttyUSB0",
-			"uri": "serial://%2fdev%2fttyusb0/"
-		}
-	]
-}
