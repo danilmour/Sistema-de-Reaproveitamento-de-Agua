@@ -20,8 +20,8 @@ Motor_2 = Pin(27, Pin.OUT)  # Contacto auxiliar - Motor 2
 # Potenciometros que simulam os contadores da água
 Cnt_Agua_sys = ADC(Pin(32))  # Contador água do sistema
 Cnt_Agua_sys.atten(ADC.ATTN_11DB)  # Full range: 3.3v
-Cnt_Agua_rede = ADC(Pin(33))  # Contaágua da rede
-Cnt_Agua_rede.atten(ADC.ATTN_11DB)  # Full range: 3.3v
+#Cnt_Agua_rede = ADC(Pin(33))  # Contaágua da rede
+#Cnt_Agua_rede.atten(ADC.ATTN_11DB)  # Full range: 3.3v
 
 # Controlo do desumidificador - ON/OFF
 Cnt_desHUM = Pin(15, Pin.OUT)  # Led nível superior ao minimo
@@ -37,6 +37,14 @@ soma = 0
 aux = 0
 tempoTotal1 = 0
 tempoTotal2 = 0
+
+# Controlo da eletroválvula
+# Se Estado_EletroValvula = 1 -> Sistema Humidair
+# Se Estado_EletroValvula = 0 -> Água da rede
+
+Estado_EletroValvula = 0 # Inicio sitema sanitário alimentado pela rede
+Cnt_EletroValvula = Pin(33, Pin.OUT)
+Cnt_EletroValvula.value(0)
 
 #####################################
 # Informação web-server             #
@@ -122,6 +130,7 @@ def nivel():
         led_amarelo.value(1)
         led_azul.value(0)
         Cnt_V3V.value(0)  # Válvula de 3 vias fechada - enche depósito
+        Estado_EletroValvula = 1 # Sistema alimentado pelo Humidair
 
     # Limite minimo - depósito vazio
     # distancia entre 18 e 20cm
@@ -132,6 +141,8 @@ def nivel():
         led_amarelo.value(0)
         led_azul.value(1)
         Cnt_V3V.value(0)  # Válvula de 3 vias fechada - enche depósito
+        Estado_EletroValvula = 0 # sistema alimentado pela rede
+
 
     # Só para uma questão de simulação - TANQUE COMPLETAMENTE CHEI0
     # distancia maior que 20 apaga os leds
@@ -142,7 +153,9 @@ def nivel():
         led_amarelo.value(1)
         led_azul.value(1)
         Cnt_V3V.value(1)  # Válvula 3 vias aberta - água fora
-    time.sleep(1)
+        Estado_EletroValvula = 1 # Sistema alimentado pelo Humidair
+
+    #time.sleep(1)
 
     return nivel_maximo, nivel_medio, nivel_minimo
 
@@ -166,6 +179,7 @@ def web_page(n):
         estado_deposito = "Medio"
     elif nivel_minimo == 1:
         estado_deposito = "vazio"
+        Estado_EletroValvula = 0
 
     Cntagua()
 
@@ -315,9 +329,11 @@ def Cntagua():
     global soma
     global tempoTotal1
     global tempoTotal2
+    global Estado_Eletrovalvula
 
     time.sleep(0.01)  # delay para a leitura atuar na iteração atual.
-    if Cnt_Agua_sys.read() < 1500:  # Pouco caudal, bombas funcionam em alternancia
+    if Cnt_Agua_sys.read() < 1500 and Estado_Eletrovalvula == 1:  # Pouco caudal, bombas funcionam em alternancia
+        Cnt_EletroValvula.value(1) # Estado_Eletrovalvula = 1, logo, sistema sanitário alimentado pelo Humidair
         if cnt == 1:
             time_start = rtc.datetime()
             # Motor_1 = Pin(14, Pin.OUT)  # Contacto auxiliar - Motor 1
@@ -341,14 +357,19 @@ def Cntagua():
             if soma > 5:
                 cnt = 1
                 soma = 0
-    if Cnt_Agua_sys.read() > 1500:  # Muito caudal, funcionam as duas bombas em conjunto
+    if Cnt_Agua_sys.read() > 1500 and Estado_Eletrovalvula == 1:  # Muito caudal, funcionam as duas bombas em conjunto
         Motor_1.value(1)
         Motor_2.value(1)
         tempoTotal1 = tempoTotal1 + 1
         tempoTotal2 = tempoTotal2 + 1
         soma = 0
         cnt = 0
+        print ('STADO',Estado_Eletrovalvula)
         time.sleep(1)
+    
+    if Estado_Eletrovalvula == 0: # Depósito vazio, eletroválvula accionada, bombas paradas - sistema sanitário alimentado pela rede
+        Cnt_EletroValvula.value(0)
+
 
 ########################################
 # Sinalização dos contactos auxiliares #
