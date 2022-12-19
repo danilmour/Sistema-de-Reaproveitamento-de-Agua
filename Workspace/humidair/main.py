@@ -178,7 +178,6 @@ def web_page(n):
         estado_deposito = "Medio"
     elif nivel_minimo == 1:
         estado_deposito = "vazio"
-        Estado_EletroValvula = 0
 
     Cntagua()
 
@@ -279,7 +278,7 @@ def web_page(n):
                                 <b>Estado da Eletroválvula</b>
                             </td>
                             <td>
-                                """ + Estado_Eletrovalvula + """
+                                """ + Estado_EletroValvula + """
                             </td>
                         </tr>
                         <tr>
@@ -352,12 +351,11 @@ def Cntagua():
     global soma
     global tempoTotal1
     global tempoTotal2
-    global Estado_Eletrovalvula
+    global Estado_EletroValvula
 
     time.sleep(0.01)  # delay para a leitura atuar na iteração atual.
     # Pouco caudal, bombas funcionam em alternancia
-    if Cnt_Agua_sys.read() < 1500 and Estado_Eletrovalvula == 1:
-        # Estado_Eletrovalvula = 1, logo, sistema sanitário alimentado pelo Humidair
+    if Cnt_Agua_sys.read() < 1500 and Estado_EletroValvula == 1:
         Cnt_EletroValvula.value(1)
         if cnt == 1:
             time_start = rtc.datetime()
@@ -383,17 +381,17 @@ def Cntagua():
                 cnt = 1
                 soma = 0
     # Muito caudal, funcionam as duas bombas em conjunto
-    if Cnt_Agua_sys.read() > 1500 and Estado_Eletrovalvula == 1:
+    if Cnt_Agua_sys.read() > 1500 and Estado_EletroValvula == 1:
         Motor_1.value(1)
         Motor_2.value(1)
         tempoTotal1 = tempoTotal1 + 1
         tempoTotal2 = tempoTotal2 + 1
         soma = 0
         cnt = 0
-        print('STADO', Estado_Eletrovalvula)
+        print('STADO', Estado_EletroValvula)
         time.sleep(1)
 
-    if Estado_Eletrovalvula == 0:  # Depósito vazio, eletroválvula accionada, bombas paradas - sistema sanitário alimentado pela rede
+    if Estado_EletroValvula == 0:  # Depósito vazio, eletroválvula accionada, bombas paradas - sistema sanitário alimentado pela rede
         Cnt_EletroValvula.value(0)
 
 
