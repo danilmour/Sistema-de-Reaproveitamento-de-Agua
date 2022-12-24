@@ -66,6 +66,8 @@ soma2 = 0
 soma3 = 0
 tempoTotal1 = 0
 tempoTotal2 = 0
+n = 0
+m = 0
 
 ssid = '6ea6en6'
 password = 'a4ae33324a96'
