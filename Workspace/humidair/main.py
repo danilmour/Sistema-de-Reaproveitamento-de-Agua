@@ -1,18 +1,15 @@
-#####################################
-# Informação web-server             #
-#####################################
-# Realiza pedido de estado do botão #
-#####################################
+#######################################
+# Informação web-server               #
+#######################################
+# Realiza pedido de estado dos botões #
+#######################################
 
 
 def pedido(s, n, m):
-    print ('bla')
     conn, addr = s.accept()
     print('Got a connection from %s' % str(addr))
-    print ('bla2')
     request = conn.recv(2048)
     request = str(request)
-    print ('bla3')
     print('Content = %s' % request)
     deshum_on = request.find('/?des=on')
     deshum_off = request.find('/?des=off')
@@ -26,41 +23,23 @@ def pedido(s, n, m):
     try:
         conn.send(response)
     except:
-        print ('error')
-        
-    print ('bla2')
+        print ('')    
+    
     conn.close()
     return  deshum_on, deshum_off, central_on, central_off
-
-#####################################
-# Informação web-server             #
-#####################################
-# Refresca a página com novos dados #
-#####################################
-
-
-# def refresh(n, m):
-#     conn, addr = s.accept()    
-#     response = web_page(n, m)  # Chama a função web_page
-#     conn.send('HTTP/1.1 200 OK\n')
-#     conn.send('Content-Type: text/html\n')
-#     conn.send('Connection: close\n\n')
-#     print ('bla')
-#     conn.sendall(response)
-#     conn.close()
 
 ##########################################
 # Informação desumidificador/temperatura #
 ##########################################
 # Bloco desumidificação                  #
 ##########################################
-# Connect to BME-280 via software SPI with custom pinning (not supported by all microcontrollers):
+
+# Connect to BME-280 via software SPI with custom pinning:
 bme = bme280.BME280(spiBus={"sck": 18, "mosi": 23, "miso": 19}, spiCS=5)
 rtc = RTC()
 
 
 def Read_BME(n):
-    #print ('bme_n', n)
     try:
         # Synchronously trigger a MODE_FORCED conversion and return the result.
         temperature, humidity, pressure = bme.readForced(filter=bme280.FILTER_2,
@@ -68,8 +47,8 @@ def Read_BME(n):
                                                          humidityOversampling=bme280.OVSMPL_4,
                                                          pressureOversampling=bme280.OVSMPL_4)
 
-        print(
-             f"{temperature:.1f} *C; {humidity * 100:.1f} % rel. hum.; {pressure / 100:.1f} hPa")
+        #print(
+        #    f"{temperature:.1f} *C; {humidity * 100:.1f} % rel. hum.; {pressure / 100:.1f} hPa")
 
     except bme280.BME280Error as e:
         print(f"BME280 error: {e}")
@@ -96,8 +75,7 @@ def nivel():
     sensor = HCSR04(trigger_pin=25, echo_pin=26, echo_timeout_us=10000)
 
     distancia = sensor.distance_cm()
-    # depósito cheio
-    # distancia entre 5 e 8cm
+    # depósito com água suficiente
     if distancia > 5 and distancia < 20:
         nivel_medio = 1
         nivel_minimo = 0
@@ -108,18 +86,17 @@ def nivel():
         Estado_EletroValvula = 0  # Sistema alimentado pelo Humidair
 
     # Limite minimo - depósito vazio
-    # distancia entre 18 e 20cm
+    # depósito vazio
     if distancia > 20:
         nivel_medio = 0
         nivel_minimo = 1
         nivel_maximo = 0
         led_amarelo.value(0)
-        led_azul.value(1)
+        led_azul.value(0)
         Cnt_V3V.value(0)  # Válvula de 3 vias fechada - enche depósito
         Estado_EletroValvula = 1  # sistema alimentado pela rede
 
-    # Só para uma questão de simulação - TANQUE COMPLETAMENTE CHEI0
-    # distancia maior que 20 apaga os leds
+    # depósito cheio
     if distancia < 5:
         nivel_medio = 0
         nivel_minimo = 0
@@ -131,29 +108,25 @@ def nivel():
 
     return nivel_maximo, nivel_medio, nivel_minimo
 
-########################
-# Criação do webserver #
-########################
 
+##############################################################
+# A função web_page retorna uma variável html                #
+# que contém o texto HTML necessário para construir a página #
+##############################################################
 
 def web_page(n, m):
     global time_start
-    global gpio_state
-    global gpio_state2
+    global estado_desumidicador
+    global estado_central
 
-    if n == 1:
-        gpio_state = "ON"
-    elif n == 0:
-        gpio_state = "OFF"
-        
-    if m == 1:
-        gpio_state2 = "ON"
-        Cnt_Central.value(1)
-    elif m == 0:
-        gpio_state2 = "OFF"
-        Cnt_Central.value(0)
-    
+   
     temperatura, humidade = Read_BME(n)
+    Cntagua()
+    
+############################################################################
+# Antes gerar a página o texto HTML todas as variáveis têm de ser testadas #
+############################################################################ 
+
     nivel_maximo, nivel_medio, nivel_minimo = nivel()
 
     if nivel_maximo == 1:
@@ -171,7 +144,20 @@ def web_page(n, m):
        estado_motor2 = "OK"
     elif Cnt_Dis_C2.value() == 0:
        estado_motor2 = "Verificar Motor"
-    
+ 
+  
+    if n == 1:
+        estado_desumidicador = "ON"
+    elif n == 0:
+        estado_desumidicador = "OFF"
+        
+    if m == 1:
+        estado_central = "ON"
+        Cnt_Central.value(1)
+    elif m == 0:
+        estado_central = "OFF"
+        Cnt_Central.value(0)
+ 
     time_start = rtc.datetime()
     time.sleep (1)
 
@@ -224,7 +210,7 @@ def web_page(n, m):
                                 <b>Desumidificador</b>
                             </td>
                             <td>
-                                """ + gpio_state + """
+                                """ + estado_desumidicador + """
                             </td>
                         </tr>
                         <tr>
@@ -232,7 +218,7 @@ def web_page(n, m):
                                 <b>Central</b>
                             </td>
                             <td>
-                                """ + gpio_state2 + """
+                                """ + estado_central + """
                             </td>
                         </tr>
                         <tr>
@@ -327,11 +313,13 @@ def web_page(n, m):
                 </body>
 
                 </html>"""
-    Cntagua()
     return html
 
-
 def webserver():
+###########################################################################
+# Cria um socket para atender pedidos e enviar o texto HTML como resposta #
+###########################################################################
+
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind(('', 80))
     s.listen(5)
@@ -342,30 +330,15 @@ def webserver():
     while True:
         des_on, des_off, central_on, central_off = pedido(s, n, m)
 
-#         if des_on == -1 and des_off == -1:
-#             n = -1
-#             #refresh(conn, n, m)
         if des_on == 6:
-            #Cnt_desHUM.value(1)
             n = 1
-            #refresh(conn, n, m)
         elif des_off == 6:
-            #Cnt_desHUM.value(0)
             n = 0
-            #refresh(conn, n, m)
 
-#         if central_on == -1 and central_off == -1:
-#             m = -1
-#             #refresh(conn, n, m)
         if central_on == 6:
-            #Cnt_Central.value(1)
             m = 1
-            #refresh(conn, n, m)
         elif central_off == 6:
-            #Cnt_Central.value(0)
-            m = 0
-        #refresh(n, m)
-            
+            m = 0          
             
 def Cntagua():
     global cnt
@@ -379,7 +352,6 @@ def Cntagua():
     if Cnt_Agua_sys.read() < 1500 and Estado_EletroValvula == 0:
         Cnt_EletroValvula.value(Estado_EletroValvula)
         if cnt == 1:
-            # Motor_1 = Pin(14, Pin.OUT)  # Contacto auxiliar - Motor 1
             Motor_1.value(0)
             Motor_2.value(1)
             time_actual = rtc.datetime()

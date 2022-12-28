@@ -1,5 +1,4 @@
 # boot.py -- run on boot-up
-# Complete project details at https://RandomNerdTutorials.com
 
 try:
   import usocket as socket
@@ -36,8 +35,6 @@ Motor_2 = Pin(27, Pin.OUT)  # Contacto auxiliar - Motor 2
 # Potenciometros que simulam os contadores da água
 Cnt_Agua_sys = ADC(Pin(32))  # Contador água do sistema
 Cnt_Agua_sys.atten(ADC.ATTN_11DB)  # Full range: 3.3v
-# Cnt_Agua_rede = ADC(Pin(33))  # Contaágua da rede
-# Cnt_Agua_rede.atten(ADC.ATTN_11DB)  # Full range: 3.3v
 
 # Controlo do desumidificador - ON/OFF
 Cnt_desHUM = Pin(15, Pin.OUT) 
@@ -59,6 +56,7 @@ Cnt_EletroValvula.value(Estado_EletroValvula)
 Cnt_V3V = Pin(2, Pin.OUT)
 Cnt_V3V.value(0)  # Válvula de 3 vias fechada - enche depósito
 
+# Incialização de variáveis
 cnt = 0
 toggle = 0
 soma1 = 0
