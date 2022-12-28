@@ -6,10 +6,13 @@
 
 
 def pedido(s, n, m):
+    print ('bla')
     conn, addr = s.accept()
     print('Got a connection from %s' % str(addr))
+    print ('bla2')
     request = conn.recv(2048)
     request = str(request)
+    print ('bla3')
     print('Content = %s' % request)
     deshum_on = request.find('/?des=on')
     deshum_off = request.find('/?des=off')
@@ -20,8 +23,12 @@ def pedido(s, n, m):
     conn.send('HTTP/1.1 200 OK\r\n')
     conn.send('Content-Type: text/html\r\n')
     conn.send('Connection: close\n\n')
-    print ('bla')
-    conn.sendall(response)
+    try:
+        conn.send(response)
+    except:
+        print ('error')
+        
+    print ('bla2')
     conn.close()
     return  deshum_on, deshum_off, central_on, central_off
 
@@ -32,15 +39,15 @@ def pedido(s, n, m):
 #####################################
 
 
-def refresh(n, m):
-    conn, addr = s.accept()    
-    response = web_page(n, m)  # Chama a função web_page
-    conn.send('HTTP/1.1 200 OK\n')
-    conn.send('Content-Type: text/html\n')
-    conn.send('Connection: close\n\n')
-    print ('bla')
-    conn.sendall(response)
-    conn.close()
+# def refresh(n, m):
+#     conn, addr = s.accept()    
+#     response = web_page(n, m)  # Chama a função web_page
+#     conn.send('HTTP/1.1 200 OK\n')
+#     conn.send('Content-Type: text/html\n')
+#     conn.send('Connection: close\n\n')
+#     print ('bla')
+#     conn.sendall(response)
+#     conn.close()
 
 ##########################################
 # Informação desumidificador/temperatura #
