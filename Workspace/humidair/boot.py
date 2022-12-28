@@ -21,8 +21,10 @@ from bme280 import BME280
 from hcsr04 import HCSR04
 import bme280
 
-led_amarelo = Pin(21, Pin.OUT)  # Led nível superior ao minimo
-led_azul = Pin(4, Pin.OUT)  # Led menor que nível minimo
+
+
+S1 = Pin(21, Pin.OUT)  # Led nível máximo - Led_amarelo
+S2 = Pin(4, Pin.OUT)  # Led nível inferior ao minimio - Led_azul
 
 # Leitura dos estados dos contactos auxiliares de disjuntores
 Cnt_Dis_C1 = Pin(34, Pin.IN)  # Contacto auxiliar - Motor 1
@@ -56,16 +58,29 @@ Cnt_EletroValvula.value(Estado_EletroValvula)
 Cnt_V3V = Pin(2, Pin.OUT)
 Cnt_V3V.value(0)  # Válvula de 3 vias fechada - enche depósito
 
-# Incialização de variáveis
+sckPin_bme280 = 18
+mosiPin_bme280 = 23
+misoPin_bme280 = 19
+spiCSPin_bme280 = 5
+
+nivel_humidade = 60
+
+distancia_min = 5
+distancia_max = 20
+
+pressao_agua = 1500
+
+# Tempo total de funcionamento dos motores
+tempoTotal1 = 0
+tempoTotal2 = 0
+
+# Incialização das variáveis auxiliares
 cnt = 0
-toggle = 0
 soma1 = 0
 soma2 = 0
 soma3 = 0
-tempoTotal1 = 0
-tempoTotal2 = 0
-n = 0
-m = 0
+n = 1
+m = 1
 
 ssid = '6ea6en6'
 password = 'a4ae33324a96'

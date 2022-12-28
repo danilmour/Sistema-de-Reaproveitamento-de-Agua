@@ -1,9 +1,6 @@
 #######################################
-# Informação web-server               #
-#######################################
 # Realiza pedido de estado dos botões #
 #######################################
-
 
 def pedido(s, n, m):
     conn, addr = s.accept()
@@ -28,46 +25,44 @@ def pedido(s, n, m):
     conn.close()
     return  deshum_on, deshum_off, central_on, central_off
 
-##########################################
-# Informação desumidificador/temperatura #
-##########################################
-# Bloco desumidificação                  #
-##########################################
+#####################################################
+# Informação desumidificador/temperatura            #
+# Ligação ao sensor de temperatura/humidade via SPI #
+#####################################################
 
-# Connect to BME-280 via software SPI with custom pinning:
-bme = bme280.BME280(spiBus={"sck": 18, "mosi": 23, "miso": 19}, spiCS=5)
+bme = bme280.BME280(spiBus={"sck": sckPin_bme280, "mosi": mosiPin_bme280, "miso": misoPin_bme280}, spiCS = spiCSPin_bme280)
 rtc = RTC()
-
 
 def Read_BME(n):
     try:
-        # Synchronously trigger a MODE_FORCED conversion and return the result.
-        temperature, humidity, pressure = bme.readForced(filter=bme280.FILTER_2,
+        temperature, raw_humidity, pressure = bme.readForced(filter=bme280.FILTER_2,
                                                          tempOversampling=bme280.OVSMPL_4,
                                                          humidityOversampling=bme280.OVSMPL_4,
                                                          pressureOversampling=bme280.OVSMPL_4)
 
+        # Se necessário por uma questão de depuração
         #print(
-        #    f"{temperature:.1f} *C; {humidity * 100:.1f} % rel. hum.; {pressure / 100:.1f} hPa")
+        #    f"{temperature:.1f} *C; {raw_humidity * 100:.1f} % rel. hum.; {pressure / 100:.1f} hPa")
 
     except bme280.BME280Error as e:
         print(f"BME280 error: {e}")
     
+    humidity = raw_humidity * 100
     
-    if humidity * 100 > 60 and n == 1:  # MUDAR ISTO
+    # Valor pré-definido da humidade por questões de simulação
+    if humidity > nivel_humidade and n == 1:
         Cnt_desHUM.value(1)
-    elif humidity * 100 < 60 or n == 0:
+    elif humidity < nivel_humidade or n == 0:
         Cnt_desHUM.value(0)
 
 
-    return temperature, humidity*100
+    return temperature, humidity
 
 ########################################
 # Cálculo do nível da água no depósito #
+# Controlo da válvula de 3 vias        #
+# Define o estado eletroválvula        #
 ########################################
-# Bloco armazenamento                  #
-########################################
-
 
 def nivel():
     global Estado_EletroValvula
@@ -75,34 +70,34 @@ def nivel():
     sensor = HCSR04(trigger_pin=25, echo_pin=26, echo_timeout_us=10000)
 
     distancia = sensor.distance_cm()
+    
     # depósito com água suficiente
-    if distancia > 5 and distancia < 20:
+    if distancia > distancia_min and distancia < distancia_max:
         nivel_medio = 1
         nivel_minimo = 0
         nivel_maximo = 0
-        led_amarelo.value(1)
-        led_azul.value(0)
+        S1.value(1) # boia em baixo
+        S2.value(0)
         Cnt_V3V.value(0)  # Válvula de 3 vias fechada - enche depósito
         Estado_EletroValvula = 0  # Sistema alimentado pelo Humidair
 
     # Limite minimo - depósito vazio
-    # depósito vazio
-    if distancia > 20:
+    if distancia > distancia_max:
         nivel_medio = 0
         nivel_minimo = 1
         nivel_maximo = 0
-        led_amarelo.value(0)
-        led_azul.value(0)
+        S1.value(0)
+        S2.value(0)
         Cnt_V3V.value(0)  # Válvula de 3 vias fechada - enche depósito
         Estado_EletroValvula = 1  # sistema alimentado pela rede
 
-    # depósito cheio
-    if distancia < 5:
+    # Limite máximo - depósito cheio
+    if distancia < distancia_min:
         nivel_medio = 0
         nivel_minimo = 0
         nivel_maximo = 1
-        led_amarelo.value(1)
-        led_azul.value(1)
+        S1.value(1)
+        S2.value(1)
         Cnt_V3V.value(1)  # Válvula 3 vias aberta - água fora
         Estado_EletroValvula = 0  # Sistema alimentado pelo Humidair
 
@@ -116,9 +111,8 @@ def nivel():
 
 def web_page(n, m):
     global time_start
-    global estado_desumidicador
+    global estado_desumidificador
     global estado_central
-
    
     temperatura, humidade = Read_BME(n)
     Cntagua()
@@ -144,12 +138,11 @@ def web_page(n, m):
        estado_motor2 = "OK"
     elif Cnt_Dis_C2.value() == 0:
        estado_motor2 = "Verificar Motor"
- 
-  
+   
     if n == 1:
-        estado_desumidicador = "ON"
+        estado_desumidificador = "ON"
     elif n == 0:
-        estado_desumidicador = "OFF"
+        estado_desumidificador = "OFF"
         
     if m == 1:
         estado_central = "ON"
@@ -157,9 +150,9 @@ def web_page(n, m):
     elif m == 0:
         estado_central = "OFF"
         Cnt_Central.value(0)
- 
+     
     time_start = rtc.datetime()
-    time.sleep (1)
+    #time.sleep (1)
 
     html = """<html>
 
@@ -210,7 +203,7 @@ def web_page(n, m):
                                 <b>Desumidificador</b>
                             </td>
                             <td>
-                                """ + estado_desumidicador + """
+                                """ + estado_desumidificador + """
                             </td>
                         </tr>
                         <tr>
@@ -339,17 +332,25 @@ def webserver():
             m = 1
         elif central_off == 6:
             m = 0          
-            
+
+########################################################
+#################### Monitorização #####################
+#                                                      #
+# Pressão do caudal da água                            #
+# Contabilização do tempo de funcionamento dos motores #
+# Controlo da eletroválvula                            #
+#                                                      #
+########################################################
 def Cntagua():
-    global cnt
-    global soma1,soma2, soma3
+    global cnt # Variável auxiliar que controla a alternância dos motores
+    global soma1, soma2, soma3
     global tempoTotal1
     global tempoTotal2
     global time_start
 
     time.sleep(0.01)  # delay para a leitura atuar na iteração atual.
     # Pouco caudal, bombas funcionam em alternancia
-    if Cnt_Agua_sys.read() < 1500 and Estado_EletroValvula == 0:
+    if Cnt_Agua_sys.read() < pressao_agua and Estado_EletroValvula == 0:
         Cnt_EletroValvula.value(Estado_EletroValvula)
         if cnt == 1:
             Motor_1.value(0)
@@ -374,7 +375,7 @@ def Cntagua():
             soma2 = 0
                 
     # Muito caudal, funcionam as duas bombas em conjunto
-    if Cnt_Agua_sys.read() > 1500 and Estado_EletroValvula == 0:
+    if Cnt_Agua_sys.read() > pressao_agua and Estado_EletroValvula == 0:
         Motor_1.value(1)
         Motor_2.value(1)
         time_actual = rtc.datetime()
@@ -382,27 +383,9 @@ def Cntagua():
         tempoTotal1 = tempoTotal1 + soma3
         tempoTotal2 = tempoTotal2 + soma3
 
-    if Estado_EletroValvula == 1:  # Depósito vazio, eletroválvula accionada, bombas paradas - sistema sanitário alimentado pela rede
+    # Depósito vazio, eletroválvula accionada, bombas paradas - sistema sanitário alimentado pela rede
+    if Estado_EletroValvula == 1:  
         Cnt_EletroValvula.value(Estado_EletroValvula)
-
-    
-########################################
-# Sinalização dos contactos auxiliares #
-########################################
-# Bloco transporte                     #
-########################################
-
-
-def CntAux():
-    if Cnt_Dis_C1.value() == 1:
-        print('Possível avaria MOTOR1')
-    elif Cnt_Dis_C1.value() == 0:
-        print('Motor 1 OK')
-
-    if Cnt_Dis_C2.value() == 1:
-        print('Possível avaria MOTOR2')
-    elif Cnt_Dis_C2.value() == 0:
-        print('Motor 2 OK')
 
 
 ######################################
