@@ -1,5 +1,27 @@
 # boot.py -- run on boot-up
 
+# Instituto Superior de Engenharia do Porto
+# HumidAir - Solução para Reaproveitamento de Água em Piscinas Aquecidas
+
+# Copyright (c) 2022 - 2023
+# Daniel Gonçalves e Eduardo Ramalhadeiro, Nº 1180812/1210171,
+# 1180812@isep.ipp.pt/1210171@isep.ipp.p
+
+# Full project code available in: https://github.com/danilmour/Sistema-de-Reaproveitamento-de-Agua
+
+# Based on: https://randomnerdtutorials.com/esp32-esp8266-micropython-web-server/
+# Complete project details at https://RandomNerdTutorials.com
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
 try:
   import usocket as socket
 except:
