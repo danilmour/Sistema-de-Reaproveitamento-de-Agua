@@ -43,8 +43,6 @@ from bme280 import BME280
 from hcsr04 import HCSR04
 import bme280
 
-
-
 S1 = Pin(21, Pin.OUT)  # Led nível máximo - Led_amarelo
 S2 = Pin(4, Pin.OUT)  # Led nível inferior ao minimio - Led_azul
 
@@ -80,10 +78,16 @@ Cnt_EletroValvula.value(Estado_EletroValvula)
 Cnt_V3V = Pin(2, Pin.OUT)
 Cnt_V3V.value(0)  # Válvula de 3 vias fechada - enche depósito
 
+# Definição dos pinos SPI do sensor de humidade/temperatura - BME280
 sckPin_bme280 = 18
 mosiPin_bme280 = 23
 misoPin_bme280 = 19
 spiCSPin_bme280 = 5
+
+# Definição dos pinos do sensor ultrassónico - HY-SRF05
+trig = 25
+echo = 26
+echo_timeout = 10000
 
 nivel_humidade = 60
 
@@ -97,7 +101,7 @@ tempoTotal1 = 0
 tempoTotal2 = 0
 
 # Incialização das variáveis auxiliares
-cnt = 0
+ctrl = 0
 soma1 = 0
 soma2 = 0
 soma3 = 0

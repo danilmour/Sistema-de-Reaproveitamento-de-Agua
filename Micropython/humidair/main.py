@@ -52,9 +52,6 @@ def pedido(s, n, m):
 # Ligação ao sensor de temperatura/humidade via SPI #
 #####################################################
 
-bme = bme280.BME280(spiBus={"sck": sckPin_bme280, "mosi": mosiPin_bme280, "miso": misoPin_bme280}, spiCS = spiCSPin_bme280)
-rtc = RTC()
-
 def Read_BME(n):
     try:
         temperature, raw_humidity, pressure = bme.readForced(filter=bme280.FILTER_2,
@@ -89,7 +86,7 @@ def Read_BME(n):
 def nivel():
     global Estado_EletroValvula
     
-    sensor = HCSR04(trigger_pin=25, echo_pin=26, echo_timeout_us=10000)
+    sensor = HCSR04(trigger_pin = trig, echo_pin = echo, echo_timeout_us = echo_timeout)
 
     distancia = sensor.distance_cm()
     
@@ -135,32 +132,38 @@ def web_page(n, m):
     global time_start
     global estado_desumidificador
     global estado_central
-   
+       
     temperatura, humidade = Read_BME(n)
-    Cntagua()
+    
+    # Leitura do estados dos motores
+    leitura_motor1 = Cnt_Dis_C1.value()
+    leitura_motor2 = Cnt_Dis_C2.value() 
+    
+    Cntagua(leitura_motor1, leitura_motor2, m)
     
 ############################################################################
 # Antes gerar a página o texto HTML todas as variáveis têm de ser testadas #
 ############################################################################ 
 
     nivel_maximo, nivel_medio, nivel_minimo = nivel()
-
     if nivel_maximo == 1:
         estado_deposito = "CHEIO"
     elif nivel_medio == 1:
         estado_deposito = "Medio"
     elif nivel_minimo == 1:
-        estado_deposito = "vazio"
-        
-    if Cnt_Dis_C1.value() == 1:
+        estado_deposito = "vazio" 
+    
+    # Leitura do estados dos motores
+    if leitura_motor1 == 1:
        estado_motor1 = "OK"
-    elif Cnt_Dis_C1.value() == 0:
+    elif leitura_motor1 == 0:
        estado_motor1 = "Verificar Motor"
-    if Cnt_Dis_C2.value() == 1:
+    if leitura_motor2 == 1:
        estado_motor2 = "OK"
-    elif Cnt_Dis_C2.value() == 0:
+    elif leitura_motor2 == 0:
        estado_motor2 = "Verificar Motor"
    
+   # Estad do desumidificador e central
     if n == 1:
         estado_desumidificador = "ON"
     elif n == 0:
@@ -363,8 +366,8 @@ def webserver():
 # Controlo da eletroválvula                            #
 #                                                      #
 ########################################################
-def Cntagua():
-    global cnt # Variável auxiliar que controla a alternância dos motores
+def Cntagua(Cnt_Dis_C1, Cnt_Dis_C2, Cnt_central):
+    global ctrl # Variável auxiliar que controla a alternância dos motores
     global soma1, soma2, soma3
     global tempoTotal1
     global tempoTotal2
@@ -372,38 +375,60 @@ def Cntagua():
 
     time.sleep(0.01)  # delay para a leitura atuar na iteração atual.
     # Pouco caudal, bombas funcionam em alternancia
-    if Cnt_Agua_sys.read() < pressao_agua and Estado_EletroValvula == 0:
+    
+    # Teste inicial da variável de controlo
+    if Cnt_Dis_C1 == 1 and Cnt_Dis_C2 == 0:
+        ctrl = 0
+    
+    if Cnt_Dis_C1 == 0 and Cnt_Dis_C2 == 1:
+        ctrl = 1
+    
+    if Cnt_Agua_sys.read() < pressao_agua and Estado_EletroValvula == 0 and Cnt_central == 1:
         Cnt_EletroValvula.value(Estado_EletroValvula)
-        if cnt == 1:
-            Motor_1.value(0)
-            Motor_2.value(1)
+        
+        # Contagem do tempo Motor 1
+        if ctrl == 0 and Cnt_Dis_C1 == 1:
+            Motor_1.value(1)
+            Motor_2.value(0)
             time_actual = rtc.datetime()
             soma1 = soma1 + abs(time_actual[6] - time_start[6])
             tempoTotal1 = tempoTotal1 + soma1
                 
-        elif cnt == 0:
-            Motor_1.value(1)
-            Motor_2.value(0)
+        # Contagem do tempo Motor 2
+        elif ctrl == 1 and Cnt_Dis_C2 == 1:
+            Motor_1.value(0)
+            Motor_2.value(1)
             time_actual = rtc.datetime()
             soma2 = soma2 + abs(time_actual[6] - time_start[6])
             tempoTotal2 = tempoTotal2 + soma2
+
+
+        if  soma2 > 5:
+            soma2 = 0
+            ctrl = 0    
         
         if  soma1 > 5:
-            cnt = 0
             soma1 = 0
+            ctrl = 1
             
-        if  soma2 > 5:
-            cnt = 1
-            soma2 = 0
-                
+    # Se na simulação os interruptores estiverem desligados, então, os motores estão parados
+    if Cnt_Dis_C1 == 0 and Cnt_Dis_C2 == 0:
+        Motor_1.value(0)
+        Motor_2.value(0)
+            
     # Muito caudal, funcionam as duas bombas em conjunto
-    if Cnt_Agua_sys.read() > pressao_agua and Estado_EletroValvula == 0:
+    if Cnt_Agua_sys.read() > pressao_agua and Estado_EletroValvula == 0 and Cnt_Dis_C1 == 1 and Cnt_Dis_C2 == 1 and Cnt_central == 1:
         Motor_1.value(1)
         Motor_2.value(1)
         time_actual = rtc.datetime()
         soma3 = soma3 + abs(time_actual[6] - time_start[6])
         tempoTotal1 = tempoTotal1 + soma3
         tempoTotal2 = tempoTotal2 + soma3
+        
+    if Cnt_Agua_sys.read() > pressao_agua and (Cnt_Dis_C1 == 0 and Cnt_Dis_C2 == 1) or (Cnt_Dis_C1 == 1 and Cnt_Dis_C2 == 0):
+        Cnt_EletroValvula.value(1) # Se houver muita pressão mas só um motor estiver operacional,
+        Motor_1.value(0)           # o sistema é alimentado pela rede
+        Motor_2.value(0)		   # Ambos os motores ficam desligados
 
     # Depósito vazio, eletroválvula accionada, bombas paradas - sistema sanitário alimentado pela rede
     if Estado_EletroValvula == 1:  
@@ -413,5 +438,7 @@ def Cntagua():
 ######################################
 # Início do funcionamento do sistema #
 ######################################
+bme = bme280.BME280(spiBus={"sck": sckPin_bme280, "mosi": mosiPin_bme280, "miso": misoPin_bme280}, spiCS = spiCSPin_bme280)
+rtc = RTC()
 while True:
     webserver()
